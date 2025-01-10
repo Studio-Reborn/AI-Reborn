@@ -2,3 +2,4 @@ Flask==3.0.3
 openai==0.28
 python-dotenv==1.0.1
 flask_restx==1.3.0
+pymysql==1.1.1

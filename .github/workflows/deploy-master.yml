@@ -1,0 +1,54 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa  
+          chmod 600 ~/.ssh/id_rsa  
+          ssh-keyscan github.com >> ~/.ssh/known_hosts  
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: youmin29/reborn
+          stage: main
+          yaml: |
+            name: ai-reborn
+            app: python@3.12
+            options:
+              ports: "5000"
+              start: python app.py
+              env:
+                - name: OPENAI_API_KEY
+                  value: "${{ secrets.OPENAI_API_KEY }}"
+                - name: FLASK_RUN_PORT
+                  value: "${{ secrets.FLASK_RUN_PORT }}"
+                - name: DB_HOST
+                  value: "${{ secrets.DB_HOST }}"
+                - name: DB_PORT
+                  value: "${{ secrets.DB_PORT }}"
+                - name: DB_USERNAME
+                  value: "${{ secrets.DB_USERNAME }}"
+                - name: DB_PASSWORD
+                  value: "${{ secrets.DB_PASSWORD }}"
+                - name: DB_DATABASE
+                  value: "${{ secrets.DB_DATABASE }}"
+              buildenv: []
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
